@@ -4,6 +4,7 @@ using Soenneker.Extensions.String;
 using System;
 using System.Buffers;
 using System.Diagnostics.Contracts;
+using System.Security.Cryptography;
 
 namespace Soenneker.Cryptography.Ed25519;
 
@@ -58,7 +59,7 @@ public static class Ed25519Util
         if (messageBytes is null || messageBytes.Length == 0)
             return false;
 
-        if (string.IsNullOrWhiteSpace(publicKeyBase64) || string.IsNullOrWhiteSpace(signatureBase64))
+        if (publicKeyBase64.IsNullOrWhiteSpace() || signatureBase64.IsNullOrWhiteSpace())
             return false;
 
         byte[] pubKey = ArrayPool<byte>.Shared.Rent(_publicKeySize);
@@ -82,8 +83,11 @@ public static class Ed25519Util
         }
         finally
         {
-            ArrayPool<byte>.Shared.Return(pubKey, clearArray: true);
-            ArrayPool<byte>.Shared.Return(sig, clearArray: true);
+            // Avoid clearing the entire rented buffers (which may be larger than the written lengths).
+            CryptographicOperations.ZeroMemory(pubKey.AsSpan(0, _publicKeySize));
+            CryptographicOperations.ZeroMemory(sig.AsSpan(0, _signatureSize));
+            ArrayPool<byte>.Shared.Return(pubKey, clearArray: false);
+            ArrayPool<byte>.Shared.Return(sig, clearArray: false);
         }
     }
 
