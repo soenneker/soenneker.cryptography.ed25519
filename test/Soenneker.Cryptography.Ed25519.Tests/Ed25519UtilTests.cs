@@ -1,17 +1,16 @@
-﻿using Soenneker.Tests.FixturedUnit;
-using Xunit;
+using Soenneker.Tests.HostedUnit;
 
 namespace Soenneker.Cryptography.Ed25519.Tests;
 
-[Collection("Collection")]
-public sealed class Ed25519UtilTests : FixturedUnitTest
+[ClassDataSource<Host>(Shared = SharedType.PerTestSession)]
+public sealed class Ed25519UtilTests : HostedUnitTest
 {
 
-    public Ed25519UtilTests(Fixture fixture, ITestOutputHelper output) : base(fixture, output)
+    public Ed25519UtilTests(Host host) : base(host)
     {
     }
 
-    [Fact]
+    [Test]
     public void Default()
     {
 
