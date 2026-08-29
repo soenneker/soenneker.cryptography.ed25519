@@ -24,15 +24,15 @@ public static class Ed25519Util
     private const int _signatureSize = 64;
 
     /// <summary>
-    /// Verifies that the specified signature is valid for the given message and public key using base64-encoded inputs.
+    /// Verifies ed25519.
     /// </summary>
-    /// <remarks>This method performs input validation and returns false if the message is null, empty, or
-    /// consists only of whitespace. For improved performance when working with large messages, consider using the
-    /// overload that accepts a byte array.</remarks>
     /// <param name="publicKeyBase64">The public key used to verify the signature, encoded as a base64 string. Must not be null or empty.</param>
     /// <param name="signatureBase64">The signature to verify, encoded as a base64 string. Must not be null or empty.</param>
     /// <param name="message">The message whose signature is to be verified. Must not be null, empty, or consist only of whitespace.</param>
     /// <returns>true if the signature is valid for the specified message and public key; otherwise, false.</returns>
+    /// <remarks>This method performs input validation and returns false if the message is null, empty, or
+    /// consists only of whitespace. For improved performance when working with large messages, consider using the
+    /// overload that accepts a byte array.</remarks>
     [Pure]
     public static bool Verify(string publicKeyBase64, string signatureBase64, string message)
     {
