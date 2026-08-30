@@ -5,36 +5,47 @@
 
 # Soenneker.Cryptography.Ed25519
 
-Provides utility methods for verifying Ed25519 digital signatures using public keys and messages encoded in base64 or as byte arrays.
+Static helpers for verifying Ed25519 signatures with Base64-encoded public keys and signatures.
 
-## Install
+## Installation
 
 ```bash
 dotnet add package Soenneker.Cryptography.Ed25519
 ```
 
-## Quick start
+## Verify bytes
 
 ```csharp
 using Soenneker.Cryptography.Ed25519;
 
-var result = Ed25519Util.Verify("value", "value", "value");
+byte[] payload = await File.ReadAllBytesAsync(path, cancellationToken);
+
+bool valid = Ed25519Util.Verify(
+    publicKeyBase64,
+    signatureBase64,
+    payload);
+
+if (!valid)
+    throw new InvalidDataException("The Ed25519 signature is invalid.");
 ```
 
-Verifies ed25519.
+The public key must decode to exactly 32 bytes and the signature to exactly 64 bytes. Inputs use standard Base64, not hexadecimal or Base64url. Malformed Base64, incorrect lengths, empty messages, and signature mismatches return `false`.
 
-## What you get
+## Verify text
 
-- `Ed25519Util` — Provides utility methods for verifying Ed25519 digital signatures using public keys and messages encoded in base64 or as byte arrays.
+```csharp
+bool valid = Ed25519Util.Verify(
+    publicKeyBase64,
+    signatureBase64,
+    "the exact signed text");
+```
 
-## API at a glance
+The string overload verifies the UTF-8 bytes of the supplied text and returns `false` for null, empty, or whitespace-only text. Use the byte-array overload when the producer signed raw bytes or when text normalization and line endings might differ.
 
-| API | What it does | Result / important behavior |
-| --- | --- | --- |
-| `Ed25519Util.Verify(publicKeyBase64, signatureBase64, message)` | Verifies ed25519. | true if the signature is valid for the specified message and public key; otherwise, false. |
+## Security notes
 
-## Important behavior
+Ed25519 verifies exact bytes. Do not parse and reserialize JSON, normalize text, change encodings, or alter line endings before verification unless the signing protocol explicitly defines that canonicalization.
 
-- `Ed25519Util`: This class is intended for scenarios where Ed25519 signature verification is required, such as validating messages or data integrity. All methods are static and thread-safe. The class does not provide key generation or signing functionality; it focuses solely on signature verification. Methods return `true` if the signature is valid for the given message and public key; otherwise, `false`. Invalid or improperly formatted inputs will result in a `false` return value rather than an exception.
-- `Ed25519Util.Verify(publicKeyBase64, signatureBase64, message)`: This method performs input validation and returns false if the message is null, empty, or consists only of whitespace. For improved performance when working with large messages, consider using the overload that accepts a byte array.
-- `Ed25519Util.Verify(publicKeyBase64, signatureBase64, messageBytes)`: This method returns false if any input is invalid or if the signature verification fails. The verification uses the Ed25519 algorithm and does not throw exceptions for invalid input or failed verification.
+A `true` result proves that the matching private key signed those bytes. It does not establish who owns the public key, whether the message is fresh, or whether it is safe to process. Obtain the public key through a trusted channel and enforce any timestamp, nonce, audience, or replay rules required by the protocol.
+
+The utility performs verification only; it does not generate keys or create signatures. All methods are static and require no dependency-injection registration.

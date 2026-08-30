@@ -2,7 +2,6 @@
 using Org.BouncyCastle.Crypto.Signers;
 using Soenneker.Extensions.String;
 using System;
-using System.Buffers;
 using System.Diagnostics.Contracts;
 using System.Security.Cryptography;
 
@@ -62,8 +61,8 @@ public static class Ed25519Util
         if (publicKeyBase64.IsNullOrWhiteSpace() || signatureBase64.IsNullOrWhiteSpace())
             return false;
 
-        byte[] pubKey = ArrayPool<byte>.Shared.Rent(_publicKeySize);
-        byte[] sig = ArrayPool<byte>.Shared.Rent(_signatureSize);
+        var pubKey = new byte[_publicKeySize];
+        var sig = new byte[_signatureSize];
 
         try
         {
@@ -83,11 +82,8 @@ public static class Ed25519Util
         }
         finally
         {
-            // Avoid clearing the entire rented buffers (which may be larger than the written lengths).
-            CryptographicOperations.ZeroMemory(pubKey.AsSpan(0, _publicKeySize));
-            CryptographicOperations.ZeroMemory(sig.AsSpan(0, _signatureSize));
-            ArrayPool<byte>.Shared.Return(pubKey, clearArray: false);
-            ArrayPool<byte>.Shared.Return(sig, clearArray: false);
+            CryptographicOperations.ZeroMemory(pubKey);
+            CryptographicOperations.ZeroMemory(sig);
         }
     }
 
