@@ -1,5 +1,5 @@
 ﻿using Org.BouncyCastle.Crypto.Parameters;
-using Org.BouncyCastle.Crypto.Signers;
+using Ed25519Algorithm = Org.BouncyCastle.Math.EC.Rfc8032.Ed25519.Algorithm;
 using Soenneker.Extensions.String;
 using System;
 using System.Diagnostics.Contracts;
@@ -61,8 +61,8 @@ public static class Ed25519Util
         if (publicKeyBase64.IsNullOrWhiteSpace() || signatureBase64.IsNullOrWhiteSpace())
             return false;
 
-        var pubKey = new byte[_publicKeySize];
-        var sig = new byte[_signatureSize];
+        Span<byte> pubKey = stackalloc byte[_publicKeySize];
+        Span<byte> sig = stackalloc byte[_signatureSize];
 
         try
         {
@@ -72,13 +72,8 @@ public static class Ed25519Util
             if (!TryDecodeBase64Fixed(signatureBase64, sig, _signatureSize))
                 return false;
 
-            var keyParam = new Ed25519PublicKeyParameters(pubKey, 0);
-            var verifier = new Ed25519Signer();
-
-            verifier.Init(false, keyParam);
-            verifier.BlockUpdate(messageBytes, 0, messageBytes.Length);
-
-            return verifier.VerifySignature(sig);
+            var keyParam = new Ed25519PublicKeyParameters(pubKey);
+            return keyParam.Verify(Ed25519Algorithm.Ed25519, null, messageBytes, sig);
         }
         finally
         {
@@ -87,8 +82,8 @@ public static class Ed25519Util
         }
     }
 
-    private static bool TryDecodeBase64Fixed(string base64, byte[] rented, int expectedLength)
+    private static bool TryDecodeBase64Fixed(string base64, Span<byte> destination, int expectedLength)
     {
-        return Convert.TryFromBase64String(base64, rented.AsSpan(0, expectedLength), out int written) && written == expectedLength;
+        return Convert.TryFromBase64String(base64, destination.Slice(0, expectedLength), out int written) && written == expectedLength;
     }
 }
