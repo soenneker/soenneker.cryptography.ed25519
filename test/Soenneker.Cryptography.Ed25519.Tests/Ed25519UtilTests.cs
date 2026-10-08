@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Soenneker.Tests.HostedUnit;
+using System.Threading;
 
 namespace Soenneker.Cryptography.Ed25519.Tests;
 
@@ -13,7 +14,7 @@ public sealed class Ed25519UtilTests : HostedUnitTest
     }
 
     [Test]
-    public async ValueTask VerifiesRfc8032TestVector()
+    public async ValueTask VerifiesRfc8032TestVector(CancellationToken cancellationToken)
     {
         byte[] publicKey = Convert.FromHexString("3D4017C3E843895A92B70AA74D1B7EBC9C982CCF2EC4968CC0CD55F12AF4660C");
         byte[] signature = Convert.FromHexString(
